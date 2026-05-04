@@ -1,0 +1,254 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+//////////////////////////////////////////////////
+// ENUMS
+//////////////////////////////////////////////////
+
+enum Role {
+  CITIZEN
+  DISPATCHER
+  ADMIN
+  HOSPITAL_ADMIN
+  DRIVER
+}
+
+enum Severity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum RequestStatus {
+  PENDING
+  ASSIGNED
+  ACCEPTED
+  EN_ROUTE
+  ARRIVED
+  COMPLETED
+  CANCELLED
+}
+
+enum AmbulanceStatus {
+  AVAILABLE
+  BUSY
+  OFFLINE
+  MAINTENANCE
+}
+
+enum AssignmentStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+//////////////////////////////////////////////////
+// USER
+//////////////////////////////////////////////////
+
+model User {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  phone       String   @unique
+  password    String?
+  role        Role     @default(CITIZEN)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  requests    EmergencyRequest[]
+  feedbacks   Feedback[]
+}
+
+//////////////////////////////////////////////////
+// DRIVER
+//////////////////////////////////////////////////
+
+model Driver {
+  id            String   @id @default(cuid())
+  name          String
+  phone         String   @unique
+  licenseNumber String   @unique
+
+  ambulanceId   String?  @unique
+  ambulance     Ambulance? @relation(fields: [ambulanceId], references: [id])
+
+  createdAt     DateTime @default(now())
+}
+
+//////////////////////////////////////////////////
+// AMBULANCE
+//////////////////////////////////////////////////
+
+model Ambulance {
+  id            String   @id @default(cuid())
+  vehicleNumber String   @unique
+  status        AmbulanceStatus @default(AVAILABLE)
+
+  latitude      Float
+  longitude     Float
+
+  driver        Driver?
+  assignments   DispatchAssignment[]
+  locations     LiveLocation[]
+
+  createdAt     DateTime @default(now())
+}
+
+//////////////////////////////////////////////////
+// HOSPITAL
+//////////////////////////////////////////////////
+
+model Hospital {
+  id            String   @id @default(cuid())
+  name          String
+  email         String?  @unique
+  phone         String?  @unique
+
+  latitude      Float
+  longitude     Float
+
+  totalBeds     Int
+  freeBeds      Int
+  icuBeds       Int
+  freeIcuBeds   Int
+
+  requests      DispatchAssignment[]
+
+  createdAt     DateTime @default(now())
+}
+
+//////////////////////////////////////////////////
+// EMERGENCY REQUEST
+//////////////////////////////////////////////////
+
+model EmergencyRequest {
+  id            String   @id @default(cuid())
+
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+
+  patientName   String?
+  symptoms      String?
+  severity      Severity
+
+  latitude      Float
+  longitude     Float
+
+  status        RequestStatus @default(PENDING)
+
+  assignment    DispatchAssignment?
+
+  createdAt     DateTime @default(now())
+}
+
+//////////////////////////////////////////////////
+// DISPATCH ASSIGNMENT
+//////////////////////////////////////////////////
+
+model DispatchAssignment {
+  id               String   @id @default(cuid())
+
+  requestId        String   @unique
+  request          EmergencyRequest @relation(fields: [requestId], references: [id])
+
+  ambulanceId      String
+  ambulance        Ambulance @relation(fields: [ambulanceId], references: [id])
+
+  hospitalId       String
+  hospital         Hospital @relation(fields: [hospitalId], references: [id])
+
+  status           AssignmentStatus @default(ACTIVE)
+
+  etaMinutes       Int?
+  routeDistanceKm  Float?
+
+  createdAt        DateTime @default(now())
+}
+
+//////////////////////////////////////////////////
+// LIVE LOCATION TRACKING
+//////////////////////////////////////////////////
+
+model LiveLocation {
+  id            String   @id @default(cuid())
+
+  ambulanceId   String
+  ambulance     Ambulance @relation(fields: [ambulanceId], references: [id])
+
+  latitude      Float
+  longitude     Float
+  speed         Float?
+
+  createdAt     DateTime @default(now())
+}
+
+//////////////////////////////////////////////////
+// ROUTE LOGS
+//////////////////////////////////////////////////
+
+model RouteLog {
+  id            String   @id @default(cuid())
+
+  requestId     String
+  routeJson     String
+
+  algorithmUsed String
+  distanceKm    Float
+  etaMinutes    Int
+
+  createdAt     DateTime @default(now())
+}
+
+//////////////////////////////////////////////////
+// AI PREDICTIONS
+//////////////////////////////////////////////////
+
+model PredictionLog {
+  id            String   @id @default(cuid())
+
+  type          String
+  inputData     String
+  outputData    String
+
+  createdAt     DateTime @default(now())
+}
+
+//////////////////////////////////////////////////
+// NOTIFICATIONS
+//////////////////////////////////////////////////
+
+model Notification {
+  id            String   @id @default(cuid())
+
+  userId        String?
+  title         String
+  message       String
+  isRead        Boolean  @default(false)
+
+  createdAt     DateTime @default(now())
+}
+
+//////////////////////////////////////////////////
+// FEEDBACK
+//////////////////////////////////////////////////
+
+model Feedback {
+  id            String   @id @default(cuid())
+
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+
+  rating        Int
+  comment       String?
+
+  createdAt     DateTime @default(now())
+}

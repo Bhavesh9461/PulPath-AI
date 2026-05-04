@@ -1,26 +1,328 @@
 @import "tailwindcss";
 
+/* =========================================
+   PULSEPATH AI — PREMIUM DESIGN SYSTEM
+   Medical + AI + Emergency Theme
+========================================= */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Base */
+  --background: #f5f9fb;
+  --foreground: #0b1220;
+
+  /* Surfaces */
+  --card: #ffffff;
+  --card-foreground: #111827;
+
+  --popover: #ffffff;
+  --popover-foreground: #111827;
+
+  /* Borders / Text */
+  --border: #dbe7ef;
+  --muted: #64748b;
+  --muted-soft: #94a3b8;
+
+  /* Brand */
+  --primary: #00b8a9;        /* Medical teal */
+  --primary-hover: #00998c;
+
+  --secondary: #00e5ff;      /* AI cyan */
+
+  --accent: #6c63ff;         /* Smart violet */
+
+  /* States */
+  --danger: #ff4d6d;         /* Emergency red */
+  --warning: #ffb703;
+  --success: #10b981;
+
+  /* Effects */
+  --ring: rgba(0, 184, 169, 0.35);
+  --shadow: 0 10px 30px rgba(2, 8, 23, 0.08);
+
+  /* Gradients */
+  --gradient-brand: linear-gradient(
+    135deg,
+    #00b8a9 0%,
+    #00e5ff 55%,
+    #6c63ff 100%
+  );
+
+  --gradient-danger: linear-gradient(
+    135deg,
+    #ff4d6d 0%,
+    #ff7b54 100%
+  );
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.dark {
+  /* Base */
+  --background: #07111f;
+  --foreground: #f8fafc;
+
+  /* Surfaces */
+  --card: #0d1b2a;
+  --card-foreground: #f8fafc;
+
+  --popover: #102033;
+  --popover-foreground: #f8fafc;
+
+  /* Borders / Text */
+  --border: #17324d;
+  --muted: #94a3b8;
+  --muted-soft: #64748b;
+
+  /* Brand */
+  --primary: #00d1c1;
+  --primary-hover: #00b8a9;
+
+  --secondary: #22f0ff;
+
+  --accent: #8b7dff;
+
+  /* States */
+  --danger: #ff5c7a;
+  --warning: #ffd166;
+  --success: #34d399;
+
+  /* Effects */
+  --ring: rgba(34, 240, 255, 0.32);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+
+  /* Gradients */
+  --gradient-brand: linear-gradient(
+    135deg,
+    #00d1c1 0%,
+    #22f0ff 55%,
+    #8b7dff 100%
+  );
+
+  --gradient-danger: linear-gradient(
+    135deg,
+    #ff5c7a 0%,
+    #ff8f70 100%
+  );
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* =========================================
+   Global Reset
+========================================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  border-color: var(--border);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(
+      circle at top right,
+      rgba(0, 229, 255, 0.08),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at bottom left,
+      rgba(108, 99, 255, 0.08),
+      transparent 30%
+    ),
+    var(--background);
+
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body), sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* =========================================
+   Typography
+========================================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-family: var(--font-heading), sans-serif;
+  letter-spacing: -0.025em;
+  color: var(--foreground);
+}
+
+p {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* =========================================
+   Selection / Scrollbar
+========================================= */
+
+::selection {
+  background: var(--primary);
+  color: white;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--primary) 55%, var(--border));
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* =========================================
+   Reusable Utility Classes
+========================================= */
+
+.glass {
+  background: color-mix(in srgb, var(--card) 78%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+}
+
+.surface {
+  background: var(--card);
+  color: var(--card-foreground);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.gradient-brand {
+  background: var(--gradient-brand);
+}
+
+.gradient-danger {
+  background: var(--gradient-danger);
+}
+
+.text-gradient {
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.ring-brand:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px var(--ring);
+}
+
+/* =========================================
+   Form Elements
+========================================= */
+
+input,
+textarea,
+select {
+  background: var(--card);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0.75rem 1rem;
+  outline: none;
+  width: 100%;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  box-shadow: 0 0 0 4px var(--ring);
+  border-color: var(--primary);
+}
+
+/* =========================================
+   Buttons
+========================================= */
+
+button {
+  font: inherit;
+}
+
+.btn-primary {
+  background: var(--gradient-brand);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 0.8rem 1.1rem;
+  transition: 0.25s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+}
+
+.btn-secondary {
+  background: var(--card);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0.8rem 1.1rem;
+  transition: 0.25s ease;
+}
+
+.btn-secondary:hover {
+  border-color: var(--primary);
+}
+
+.btn-danger {
+  background: var(--gradient-danger);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 0.8rem 1.1rem;
+}
+
+/* =========================================
+   Cards
+========================================= */
+
+.card {
+  background: var(--card);
+  color: var(--card-foreground);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+}
+
+/* =========================================
+   Status Colors
+========================================= */
+
+.status-success {
+  color: var(--success);
+}
+
+.status-warning {
+  color: var(--warning);
+}
+
+.status-danger {
+  color: var(--danger);
+}
+
+.status-primary {
+  color: var(--primary);
 }
