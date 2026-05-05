@@ -1,3 +1,6 @@
-export default function Citizen() {
-  return <div>Citizen Dashboard</div>;
+import CitizenRequestForm from "@/components/citizen/citizen-request-form";
+
+
+export default function CitizenPage() {
+  return <CitizenRequestForm />;
 }

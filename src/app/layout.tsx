@@ -1,4 +1,5 @@
 import "./globals.css";
+import "leaflet/dist/leaflet.css";
 
 import { Inter, Sora } from "next/font/google";
 import ThemeProvider from "@/providers/theme-provider";
