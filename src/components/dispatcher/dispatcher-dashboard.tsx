@@ -3,12 +3,7 @@
 import { useEffect, useState } from "react";
 import { socket } from "@/lib/socket";
 import LiveDispatchMap from "@/components/maps/dispatch-map-wrapper";
-import {
-  Activity,
-  Ambulance,
-  Hospital,
-  Radio,
-} from "lucide-react";
+import { Activity, Ambulance, Hospital, Radio } from "lucide-react";
 
 type Location = {
   latitude: number;
@@ -43,6 +38,7 @@ type LiveEmergency = {
 
 export default function DispatcherDashboard() {
   const [emergencies, setEmergencies] = useState<LiveEmergency[]>([]);
+  const [assigning, setAssigning] = useState(false);
 
   const [ambulanceLocation, setAmbulanceLocation] = useState<Location>({
     latitude: 23.027,
@@ -116,6 +112,63 @@ export default function DispatcherDashboard() {
 
   const latestEmergency = emergencies[0];
 
+  const confirmDispatch = async () => {
+    if (!latestEmergency) {
+      alert("No emergency selected");
+      return;
+    }
+
+    if (
+      !latestEmergency.nearestAmbulance?.id ||
+      !latestEmergency.recommendedHospital?.id
+    ) {
+      alert("Missing ambulance or hospital recommendation");
+      return;
+    }
+
+    setAssigning(true);
+
+    const res = await fetch("/api/dispatch/assign", {
+      method: "POST",
+      body: JSON.stringify({
+        requestId: latestEmergency.emergency.id,
+        ambulanceId: latestEmergency.nearestAmbulance.id,
+        hospitalId: latestEmergency.recommendedHospital.id,
+        etaMinutes: 7,
+        routeDistanceKm: latestEmergency.recommendedHospital.distanceKm || 4.2,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error || "Dispatch failed");
+      setAssigning(false);
+      return;
+    }
+
+    socket.emit("dispatch:assigned", {
+      requestId: latestEmergency.emergency.id,
+      assignment: data.assignment,
+    });
+
+    setEmergencies((prev) =>
+      prev.map((item) =>
+        item.emergency.id === latestEmergency.emergency.id
+          ? {
+              ...item,
+              emergency: {
+                ...item.emergency,
+                status: "ASSIGNED",
+              },
+            }
+          : item,
+      ),
+    );
+
+    setAssigning(false);
+  };
+
   return (
     <section className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
@@ -132,8 +185,8 @@ export default function DispatcherDashboard() {
           </h1>
 
           <p className="mt-2 max-w-2xl">
-            Monitor emergencies, ambulances, hospital capacity, and
-            AI-powered dispatch recommendations in real time.
+            Monitor emergencies, ambulances, hospital capacity, and AI-powered
+            dispatch recommendations in real time.
           </p>
         </div>
 
@@ -182,13 +235,11 @@ export default function DispatcherDashboard() {
 
         <div className="space-y-4">
           <div className="card p-5">
-            <h2 className="text-xl font-semibold">
-              AI Recommendation
-            </h2>
+            <h2 className="text-xl font-semibold">AI Recommendation</h2>
 
             <p className="mt-1 text-sm">
-              Best dispatch decision based on distance, severity,
-              hospital load, and live ambulance position.
+              Best dispatch decision based on distance, severity, hospital load,
+              and live ambulance position.
             </p>
 
             <div className="mt-5 space-y-3">
@@ -203,8 +254,7 @@ export default function DispatcherDashboard() {
               <InfoRow
                 label="Recommended Hospital"
                 value={
-                  latestEmergency?.recommendedHospital?.name ||
-                  "Waiting..."
+                  latestEmergency?.recommendedHospital?.name || "Waiting..."
                 }
               />
 
@@ -229,15 +279,17 @@ export default function DispatcherDashboard() {
               <InfoRow label="ETA" value="7 minutes" />
             </div>
 
-            <button className="btn-primary w-full mt-5">
-              Confirm Dispatch
+            <button
+              onClick={confirmDispatch}
+              disabled={!latestEmergency || assigning}
+              className="btn-primary w-full mt-5 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {assigning ? "Assigning..." : "Confirm Dispatch"}
             </button>
           </div>
 
           <div className="card p-5">
-            <h2 className="text-xl font-semibold">
-              Live Emergency Queue
-            </h2>
+            <h2 className="text-xl font-semibold">Live Emergency Queue</h2>
 
             <div className="mt-4 space-y-3">
               {emergencies.length === 0 ? (
@@ -254,8 +306,7 @@ export default function DispatcherDashboard() {
                       </p>
 
                       <p className="text-xs mt-1">
-                        Patient:{" "}
-                        {item.emergency.patientName || "Unknown"}
+                        Patient: {item.emergency.patientName || "Unknown"}
                       </p>
 
                       <p className="text-xs">
@@ -263,9 +314,7 @@ export default function DispatcherDashboard() {
                         {item.recommendedHospital?.name || "Calculating..."}
                       </p>
 
-                      <p className="text-xs">
-                        Priority #{index + 1}
-                      </p>
+                      <p className="text-xs">Priority #{index + 1}</p>
                     </div>
 
                     <span

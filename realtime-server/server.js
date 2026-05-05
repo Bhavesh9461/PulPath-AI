@@ -5,10 +5,12 @@ const { Server } = require("socket.io");
 
 const app = express();
 
-app.use(cors({
-  origin: "http://localhost:3000",
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  }),
+);
 
 const server = http.createServer(app);
 
@@ -56,7 +58,7 @@ io.on("connection", (socket) => {
     if (data.requestId) {
       io.to(`request:${data.requestId}`).emit(
         "ambulance:location:update",
-        payload
+        payload,
       );
     }
   });
@@ -67,6 +69,14 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log("Client disconnected:", socket.id);
+  });
+
+  socket.on("dispatch:assigned", (data) => {
+    io.to("dispatchers").emit("dispatch:assigned:update", data);
+
+    if (data.requestId) {
+      io.to(`request:${data.requestId}`).emit("dispatch:assigned:update", data);
+    }
   });
 });
 

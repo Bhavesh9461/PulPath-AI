@@ -10,16 +10,13 @@ type Location = {
   longitude: number;
 };
 
-export default function CitizenTracking({
-  requestId,
-}: {
-  requestId: string;
-}) {
-  const [ambulanceLocation, setAmbulanceLocation] =
-    useState<Location>({
-      latitude: 23.027,
-      longitude: 72.571,
-    });
+export default function CitizenTracking({ requestId }: { requestId: string }) {
+  const [ambulanceLocation, setAmbulanceLocation] = useState<Location>({
+    latitude: 23.027,
+    longitude: 72.571,
+  });
+
+  const [dispatchStatus, setDispatchStatus] = useState("Waiting for dispatch");
 
   const userLocation = {
     latitude: 23.0225,
@@ -42,8 +39,13 @@ export default function CitizenTracking({
       });
     });
 
+    socket.on("dispatch:assigned:update", () => {
+      setDispatchStatus("Ambulance assigned successfully");
+    });
+
     return () => {
       socket.off("ambulance:location:update");
+      socket.off("dispatch:assigned:update");
       socket.disconnect();
     };
   }, [requestId]);
@@ -51,20 +53,28 @@ export default function CitizenTracking({
   return (
     <section className="space-y-6">
       <div className="card p-5 md:p-7">
-        <p
-          className="text-sm font-semibold"
-          style={{ color: "var(--success)" }}
-        >
-          Emergency Request Active
-        </p>
+        <div className="flex items-center gap-3">
+          <p
+            className="text-sm font-semibold"
+            style={{ color: "var(--success)" }}
+          >
+            Emergency Request Active
+          </p>
+
+          <p
+            className="text-sm font-semibold"
+            style={{ color: "var(--primary)" }}
+          >
+            - {dispatchStatus}
+          </p>
+        </div>
 
         <h1 className="text-3xl md:text-5xl font-bold mt-2">
           Ambulance is on the way
         </h1>
 
         <p className="mt-3">
-          Your request has been received. Track ambulance movement
-          live below.
+          Your request has been received. Track ambulance movement live below.
         </p>
 
         <div className="grid sm:grid-cols-4 gap-4 mt-6">
@@ -98,9 +108,7 @@ function Step({
       <div
         className="h-10 w-10 rounded-2xl flex items-center justify-center"
         style={{
-          background: active
-            ? "var(--gradient-brand)"
-            : "var(--card)",
+          background: active ? "var(--gradient-brand)" : "var(--card)",
           color: active ? "white" : "var(--muted)",
         }}
       >
